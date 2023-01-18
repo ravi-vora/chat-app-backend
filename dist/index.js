@@ -5,6 +5,10 @@ import { Server } from 'socket.io';
 import { connectToRedis } from './services/redis.service.js';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+/**
+ * importing socket handlers
+ */
+import { getOnlineUsers, joinUser, leaveRoom } from './routes/user.router.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 connectToDatabase().then(() => {
@@ -18,7 +22,11 @@ connectToDatabase().then(() => {
             }
         });
         io.on('connection', (socket) => {
-            console.log(`socket connected : ${socket.id}`);
+            if (socket.handshake.headers.authorization)
+                joinUser(io, socket, { token: socket.handshake.headers.authorization });
+            socket.on('user:signup', (payload) => joinUser(io, socket, payload));
+            socket.on('disconnect', (payload) => leaveRoom(io, socket, payload));
+            socket.on('user:get_onlines', (payload) => getOnlineUsers(io, socket, payload));
         });
         httpServer.listen(port, () => {
             console.log(`Server is running on port : ${port}`);
