@@ -88,15 +88,24 @@ export const verifyJwt = ( token: string ) : TokenStatus => {
 
 export const authUser = (token: string, callback) : void => {
     const jwtValidation = verifyJwt(token);
-    if(!jwtValidation.validate) callback(false);
+    if(!jwtValidation.validate) callback({
+        validate: false
+    });
     else {
         const id = jwtValidation.id;
         User.findById(id).then((result) => {
-            if (!result) callback(false)
-            else return callback(true)
+            if (!result) callback({
+                validate: false
+            })
+            else return callback({
+                validate: true,
+                user: result
+            })
         }).catch((e: Error) => {
             console.log(e.stack);
-            callback(false)
+            callback({
+                validate: false
+            })
         })
     }
 }

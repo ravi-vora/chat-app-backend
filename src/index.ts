@@ -10,6 +10,7 @@ import { dirname } from 'path';
  * importing socket handlers
  */
 import { getOnlineUsers, joinUser, leaveRoom} from './routes/user.router.js'
+import { sendMessage, viewMessage } from './routes/chat.router.js'
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -32,6 +33,8 @@ connectToDatabase().then(() : void => {
             socket.on('user:signup', (payload) => joinUser(io, socket, payload));
             socket.on('disconnect', (payload) => leaveRoom(io, socket, payload));
             socket.on('user:get_onlines', (payload) => getOnlineUsers(io, socket, payload));
+            socket.on('chat:message', (payload) => sendMessage(io, socket, payload));
+            socket.on('chat:message:view', (payload) => viewMessage(io, socket, payload));
         })
 
         httpServer.listen(port, () : void => {

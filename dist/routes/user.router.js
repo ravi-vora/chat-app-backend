@@ -20,6 +20,7 @@ export const joinUser = (io, socket, payload) => {
             User.findByIdAndUpdate(auth.id, { socketId: socket.id }).then((result) => {
                 if (result) {
                     const jwt = issueJWT(auth.id);
+                    socket.join(result.roomId);
                     socket.emit('user:signup:success', {
                         token: jwt.token,
                         expires: jwt.expires
@@ -70,6 +71,7 @@ export const joinUser = (io, socket, payload) => {
                             token: jwt.token,
                             expires: jwt.expires
                         });
+                        socket.broadcast.emit('user:new:join', result);
                         socket.broadcast.emit('user:all', {
                             general: [`${result.email} joined`]
                         });
@@ -98,6 +100,7 @@ export const joinUser = (io, socket, payload) => {
                             token: jwt.token,
                             expires: jwt.expires
                         });
+                        socket.broadcast.emit('user:new:join', result);
                         socket.broadcast.emit('user:all', {
                             general: [`${result.email} joined`]
                         });
@@ -132,7 +135,7 @@ export const getOnlineUsers = (io, socket, payload) => {
      * checking if the person who is asking for the data is in the system or not.
      */
     authUser(payload['Authorization'], (jwtValidate) => {
-        if (!jwtValidate) {
+        if (!jwtValidate.validate) {
             socket.emit('user:signup:fail', {
                 general: ["signup expired"]
             });
@@ -146,9 +149,9 @@ export const getOnlineUsers = (io, socket, payload) => {
             const sockets = io.sockets;
             User.find({}).then((result) => {
                 if (result) {
-                    const onlineUser = [...sockets.adapter.sids.keys()];
+                    const onlineUser = [...sockets.adapter.rooms.keys()];
                     const filterUsers = result.filter((key) => {
-                        return onlineUser.includes(key.socketId) && key.socketId !== socket.id;
+                        return onlineUser.includes(key.roomId) && key.socketId !== socket.id;
                     });
                     socket.emit('user:get_onlines:success', {
                         users: filterUsers
@@ -170,10 +173,10 @@ export const getOnlineUsers = (io, socket, payload) => {
 export const leaveRoom = (io, socket, payload) => {
     User.findOne({ socketId: socket.id }).then((result) => {
         if (result) {
+            socket.broadcast.emit('user:new:left', {
+                email: result.email
+            });
             socket.leave(result.roomId);
-        }
-        else {
-            console.log('something went wrong in signup logic');
         }
     }).catch((e) => {
         console.log(`something went wrong : ${e.message}`);

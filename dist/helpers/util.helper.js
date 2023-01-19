@@ -76,17 +76,26 @@ export const verifyJwt = (token) => {
 export const authUser = (token, callback) => {
     const jwtValidation = verifyJwt(token);
     if (!jwtValidation.validate)
-        callback(false);
+        callback({
+            validate: false
+        });
     else {
         const id = jwtValidation.id;
         User.findById(id).then((result) => {
             if (!result)
-                callback(false);
+                callback({
+                    validate: false
+                });
             else
-                return callback(true);
+                return callback({
+                    validate: true,
+                    user: result
+                });
         }).catch((e) => {
             console.log(e.stack);
-            callback(false);
+            callback({
+                validate: false
+            });
         });
     }
 };

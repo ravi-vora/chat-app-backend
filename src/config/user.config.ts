@@ -24,3 +24,7 @@ export interface TokenStatus {
     message: string,
     id?: string
 }
+
+export interface AuthErrorSchema {
+    authorization: string[]
+}
