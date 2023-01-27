@@ -13,8 +13,8 @@ export const validateUser = (user) : {validate: boolean, errors?: any, data?: an
         general: []
     }
 
-    if ( !email && email === "") errors.email.push("Email is required")
-    if ( !password && password === "") errors.password.push("Password is required")
+    if ( !email || email === "") errors.email.push("Email is required")
+    if ( !password || password === "") errors.password.push("Password is required")
 
     if ( email && !validateEmail(email) ) errors.email.push("Email is invalid.")
 
